@@ -1,6 +1,5 @@
 import numpy as np
 
-
 class ModelTemplate(object):
     def __init__(self, parser):
         pass

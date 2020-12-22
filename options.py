@@ -1,29 +1,13 @@
 import argparse
+from utils import str_to_bool
 
-def str_to_bool(v):
-    """ This function turn all the True-intended string into True.
-
-    Usage example:
-        add_argument('--option1', type=str_to_bool, nargs='?', const=True, default=False, help='...')
-    In cmd, all the following lines will be interpreted as option1=True:
-        python train.py --option1        # this is set by (nargs='?', const=True)
-        python train.py --option1 yes
-        python train.py --option1 true
-        python train.py --option1 t
-        python train.py --option1 y
-        python train.py --option1 1
-    """
-    if v.lower() in ('yes', 'true', 't', 'y', '1'):
-        return True
-    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
-        return False
-    else:
-        raise argparse.ArgumentTypeError('Boolean value expected.')
 
 class ArgumentParser():
     def __init__(self, model=None):
         self.parser = argparse.ArgumentParser(description='Hotel Booking Demands Problem')
         self.add_base_parameters()
+        self.add_dataset_parameters()
+        self.universal_arguments = {'base', 'dataset'}
 
         # parameters for random forest
         self.add_rf_parameters()
@@ -36,21 +20,24 @@ class ArgumentParser():
         
         # parameters for neural networks
         self.add_nn_parameters()
+        
+    
+    def add_base_parameters(self):
+        base_params = self.parser.add_argument_group('base')
+        # add the arguments that will be used by all models
+        base_params.add_argument('--model', type=str, default='', help='type of model to use')
 
 
+    def add_dataset_parameters(self):
+        dataset_params = self.parser.add_argument_group('dataset')
+        dataset_params.add_argument('--dataset-csv-path', type=str, default='data', help='path to dataset csv folder')
+
+    
     # example function of how to add your arguments
     def add_example_parameters(self):
         example_params = self.parser.add_argument_group('example')
         example_params.add_argument('--result-model-fn', type=str, default='trained_model_filename', help='trained model filename')
         example_params.add_argument('--result-model-dir', type=str, default='trained_model', help='path to trained models folder')
-        
-    
-
-    def add_base_parameters(self):
-        base_params = self.parser.add_argument_group('base')
-        # add the arguments that will be used by all models
-        base_params.add_argument('--model', type=str, default='', help='type of model to use')
-        base_params.add_argument('--data-dir', type=str, default='data', help='path to dataset')
 
 
     def add_rf_parameters(self):
@@ -77,23 +64,24 @@ class ArgumentParser():
         nn_params.add_argument('--nn_param1', type=float, default=1., help='...')
 
 
-    def parse(self,arg_str=None):
+    def parse(self, arg_str=None):
         if arg_str is None:
             args = self.parser.parse_args()
         else:
             args = self.parser.parse_args(arg_str.split())
         arg_groups = {}
         for group in self.parser._action_groups:
-            if group.title == args.model or group.title == 'base':
+            if group.title == args.model or group.title in self.universal_arguments:
                 group_dict = {a.dest:getattr(args,a.dest,None) for a in group._group_actions}
-                arg_groups[group.title]=group_dict
-        return (args,arg_groups)
+                arg_groups[group.title] = group_dict
+        return (args, arg_groups)
 
 
 if __name__ == '__main__':
     """ options.ArgumentParser() usage example
 
-    arg_groups only contains the base arguments and the given model arguments (depend on --model)
+    Note that the dictionary 'arg_groups' only contains the base arguments and \
+        the arguments of the given model (depend on --model)
     try to run 'python options.py --model svm'
     """
     args,arg_groups = ArgumentParser().parse()
