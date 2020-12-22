@@ -5,7 +5,7 @@ from utils import str_to_bool
 class ArgumentParser():
     def __init__(self, model=None):
         self.parser = argparse.ArgumentParser(description='Hotel Booking Demands Problem')
-        self.add_base_parameters()
+        self.add_base_parameters() # the arguments that will be used by all models
         self.add_dataset_parameters()
         self.universal_arguments = {'base', 'dataset'}
 
@@ -20,24 +20,23 @@ class ArgumentParser():
         
         # parameters for neural networks
         self.add_nn_parameters()
+
+        # parameters for cancel toy model
+        self.add_cancel_model_parameters()
         
     
     def add_base_parameters(self):
         base_params = self.parser.add_argument_group('base')
-        # add the arguments that will be used by all models
         base_params.add_argument('--model', type=str, default='', help='type of model to use')
+        base_params.add_argument('--use_cuda', type=str_to_bool, nargs='?', const=True, default=False, help='use cuda')
+        base_params.add_argument('--result-model-fn', type=str, default='trained_model_filename', help='trained model filename')
+        base_params.add_argument('--result-model-dir', type=str, default='trained_models', help='path to trained models folder')
+        base_params.add_argument('--seed', type=int, default=1126, help='random seed')
 
 
     def add_dataset_parameters(self):
         dataset_params = self.parser.add_argument_group('dataset')
         dataset_params.add_argument('--dataset-csv-path', type=str, default='data', help='path to dataset csv folder')
-
-    
-    # example function of how to add your arguments
-    def add_example_parameters(self):
-        example_params = self.parser.add_argument_group('example')
-        example_params.add_argument('--result-model-fn', type=str, default='trained_model_filename', help='trained model filename')
-        example_params.add_argument('--result-model-dir', type=str, default='trained_model', help='path to trained models folder')
 
 
     def add_rf_parameters(self):
@@ -62,6 +61,19 @@ class ArgumentParser():
         nn_params = self.parser.add_argument_group('nn')
         # add your nn params
         nn_params.add_argument('--nn_param1', type=float, default=1., help='...')
+
+
+    # example function of how to add arguments
+    def add_cancel_model_parameters(self):
+        cancel_params = self.parser.add_argument_group('cancel')
+        cancel_params.add_argument('--input_size', type=int, default=10, help='i.e. feature size (1 dimension)')
+        cancel_params.add_argument('--hidden_size', type=int, default=16, help='the size of the hidden layer')
+        cancel_params.add_argument('--epoch', type=int, default=1000, help='the number of epoches')
+        cancel_params.add_argument('--optimizer', type=str, default='Adam', help='the type of optimizer to use')
+        cancel_params.add_argument('--lr', type=float, default=0.001, help='learning rate')
+        cancel_params.add_argument('--loss', type=str, default='BCE', help='the type of loss function to use')
+        cancel_params.add_argument('--load_trained_model', type=str, default='', help='load_trained_model')
+        cancel_params.add_argument('--batch_size', type=int, default=64, help='the size of batch size')
 
 
     def parse(self, arg_str=None):

@@ -23,7 +23,6 @@ class DummyLoader(Dataset):
                                       )
                 print(dataset[idx]) # this return {'feature': feature, 'target':target}
 
-
     
     args:
         :dataset_csv_path: (str)
@@ -73,12 +72,20 @@ class CancelDataset(DummyLoader):
         feature_col_idx = [list(self.col_names_list).index(col_n) for col_n in feature_col_names]
         target_col_idx = [list(self.col_names_list).index(col_n) for col_n in target_col_names]
 
-        feature = torch.tensor(self.train_feature.iloc[idx, feature_col_idx].to_numpy().astype(np.float64))
-        target = torch.tensor(self.train_feature.iloc[idx, target_col_idx].to_numpy().astype(np.float64))
+        feature = torch.tensor(self.train_feature.iloc[idx, feature_col_idx].to_numpy().astype(np.float32))
+        target = torch.tensor(self.train_feature.iloc[idx, target_col_idx].to_numpy().astype(np.float32))
 
         return {'feature': feature, 'target':target}
 
 
+class YourDataset(DummyLoader):
+    def __getitem__(self, idx):
+        # TODO
+        pass
+
+
+
+# testing codes
 if __name__ == '__main__':
     args,arg_groups = ArgumentParser().parse()
     print(args)

@@ -9,4 +9,19 @@ Dataset: [Hotel booking demands](https://www.kaggle.com/jessemostipak/hotel-book
 - numpy
 
 ## To ChangLee
-I wrote a file `options.py` for you to use manage experiment arguments. The usage is in the file.
+Belows are the skeleton of training module:
+- `options.py`: class for managing experiment arguments (usages are in the file)
+- `dataloader.py`: class for loading data (usages are in the file)
+- `model/`: you can wrote your model file and put it in `model/`. For the format and usage, please see the template `model_template.py` and a small example `cancel_toy_model.py` I wrote for reference.
+- `util.py`: some small functions
+
+## Quick Start
+I wrote a small example of **a cancellation model**, a 1 hidden-layer perceptron that prediction whether a request will be cancelled or not. To see how it work, please run
+```
+python train.py --model cancel
+```
+
+Still some bugs due to nan in the dataset. Need some data pre-processing. I will fix it later.
+
+
+

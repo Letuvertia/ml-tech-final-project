@@ -1,3 +1,6 @@
+from os import makedirs, remove
+from os.path import exists, join, basename, dirname
+
 def str_to_bool(v):
     """ This function turn all the True-intended string into True.
 
@@ -17,3 +20,20 @@ def str_to_bool(v):
         return False
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
+
+
+def save_checkpoint(state, file, is_best, is_final=False, is_training=True):
+    model_dir = dirname(file)
+    model_fn = basename(file)
+    # make dir if needed (should be non-empty)
+    if model_dir != '' and not exists(model_dir):
+        makedirs(model_dir)
+    if is_training:
+        torch.save(state, file)
+
+    prefix = ''
+    if is_final:
+        prefix = 'best_'
+    elif is_best:
+        prefix = 'final_'
+    torch.save(state, join(model_dir, prefix+model_fn))
