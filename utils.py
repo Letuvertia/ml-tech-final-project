@@ -1,5 +1,90 @@
+import pandas as pd
+import numpy as np
+from sklearn.preprocessing import OneHotEncoder
 from os import makedirs, remove
 from os.path import exists, join, basename, dirname
+
+
+class DataManeger:
+    def __init__(self, path, drop_list=['arrival_date_year', 'arrival_date_month', 'arrival_date_day_of_month', 'ID', 'is_canceled', 'reservation_status_date', 'reservation_status', 'adr']):
+        self.df = self.read_csv(path)
+        self.partitions = self.df.groupby(
+            ['arrival_date_year', 'arrival_date_month', 'arrival_date_day_of_month'])
+        self.drop_list = drop_list
+        self.df = self.feature_filtering(self.df, self.drop_list)
+        self.set_onehot_encoder()
+
+    def get_revenue(self, x):
+        x['revenue'] = (x['stays_in_weekend_nights'] +
+                        x['stays_in_week_nights']) * x['adr'] * (1 - x['is_canceled'])
+
+    def read_csv(self, path):
+        df = pd.read_csv(path).fillna(
+            {'agent': -1, 'company': -1, 'country': 'NAN'})
+        df['agent'] = df['agent'].astype(int).astype(str).replace('-1', 'NAN')
+        df['company'] = df['company'].astype(int).astype(str).replace('-1', 'NAN')
+        if 'adr' in df.columns:
+            self.get_revenue(df)
+        return df
+
+    def get_label(self, x):
+        return x['revenue'].sum() // 10000
+
+    def feature_filtering(self, df, drop_list):
+        return df.drop(set(drop_list) & set(df.columns), axis=1)
+
+    def set_onehot_encoder(self):
+        text_list = [c for c in self.df.columns if not ('int' in str(
+            self.df[c].dtypes) or 'float' in str(self.df[c].dtypes))]
+        self.oh_enc = OneHotEncoder()
+        self.oh_enc.fit(self.df[text_list].values)
+
+    def get_arr(self, df):
+        text_list = []
+        num_list = []
+        for c in df.columns:
+            if not ('int' in str(self.df[c].dtypes) or 'float' in str(self.df[c].dtypes)):
+                text_list.append(c)
+            else:
+                num_list.append(c)
+
+        category_data = self.oh_enc.transform(
+            df[text_list].values).toarray()
+        numeric_data = df[num_list].values
+        data = np.concatenate((category_data, numeric_data), axis=1)
+        return data
+
+    def get_revenue_feat(self):
+        data = self.get_arr(self.df)
+        return data[:, :-1], data[:, -1]
+
+    def get_day_feat(self):
+        data = self.get_arr(self.df)
+        struc_data = []
+        for key in self.partitions.groups:
+            struc_data.append(data[self.partitions.get_group(key).index])
+        return struc_data
+
+    def load_test(self, tst_path):
+        tst_df = self.read_csv(tst_path)
+        tst_partitions = tst_df.groupby(
+            ['arrival_date_year', 'arrival_date_month', 'arrival_date_day_of_month'])
+        tst_df = self.feature_filtering(tst_df, self.drop_list)
+        
+        # filter unseen catgories
+        tst_df.to_csv('gg1.csv', index=False)
+        for c in tst_df.columns:
+            if not ('int' in str(self.df[c].dtypes) or 'float' in str(self.df[c].dtypes)):
+                all_cat = set(self.df[c])
+                tst_df[c][~tst_df[c].isin(all_cat)] = 'NAN'
+                
+        tst_df.to_csv('gg2.csv', index=False)
+        data = self.get_arr(tst_df)
+        struc_data = []
+        for key in tst_partitions.groups:
+            struc_data.append(data[tst_partitions.get_group(key).index])
+        return struc_data
+
 
 def str_to_bool(v):
     """ This function turn all the True-intended string into True.
