@@ -3,10 +3,12 @@ import numpy as np
 from sklearn.preprocessing import OneHotEncoder
 from os import makedirs, remove
 from os.path import exists, join, basename, dirname
-
+import csv
 
 class DataManeger:
-    def __init__(self, path, drop_list=['arrival_date_year', 'arrival_date_month', 'arrival_date_day_of_month', 'ID', 'is_canceled', 'reservation_status_date', 'reservation_status', 'adr']):
+    def __init__(self, path, drop_list=['arrival_date_year',
+                                        'arrival_date_day_of_month', 'ID', 'is_canceled',
+                                        'reservation_status_date', 'reservation_status', 'adr']):
         self.df = self.read_csv(path)
         self.partitions = self.df.groupby(
             ['arrival_date_year', 'arrival_date_month', 'arrival_date_day_of_month'])
@@ -20,15 +22,14 @@ class DataManeger:
 
     def read_csv(self, path):
         df = pd.read_csv(path).fillna(
-            {'agent': -1, 'company': -1, 'country': 'NAN'})
+            {'children': 0, 'agent': -1, 'company': -1, 'country': 'NAN'})
         df['agent'] = df['agent'].astype(int).astype(str).replace('-1', 'NAN')
-        df['company'] = df['company'].astype(int).astype(str).replace('-1', 'NAN')
+        df['company'] = df['company'].astype(
+            int).astype(str).replace('-1', 'NAN')
+
         if 'adr' in df.columns:
             self.get_revenue(df)
         return df
-
-    def get_label(self, x):
-        return x['revenue'].sum() // 10000
 
     def feature_filtering(self, df, drop_list):
         return df.drop(set(drop_list) & set(df.columns), axis=1)
@@ -54,38 +55,59 @@ class DataManeger:
         data = np.concatenate((category_data, numeric_data), axis=1)
         return data
 
-    def get_revenue_feat(self):
-        data = self.get_arr(self.df)
-        return data[:, :-1], data[:, -1]
-
-    def get_day_feat(self):
+    def get_feat(self):
         data = self.get_arr(self.df)
         struc_data = []
         for key in self.partitions.groups:
-            struc_data.append(data[self.partitions.get_group(key).index])
-        return struc_data
+            struc_data.append([[key[0], month_converter(
+                key[1]), key[2]], data[self.partitions.get_group(key).index]])
+        return sorted(struc_data)
 
     def load_test(self, tst_path):
         tst_df = self.read_csv(tst_path)
         tst_partitions = tst_df.groupby(
             ['arrival_date_year', 'arrival_date_month', 'arrival_date_day_of_month'])
         tst_df = self.feature_filtering(tst_df, self.drop_list)
-        
+
         # filter unseen catgories
-        tst_df.to_csv('gg1.csv', index=False)
         for c in tst_df.columns:
             if not ('int' in str(self.df[c].dtypes) or 'float' in str(self.df[c].dtypes)):
                 all_cat = set(self.df[c])
                 tst_df[c][~tst_df[c].isin(all_cat)] = 'NAN'
-                
-        tst_df.to_csv('gg2.csv', index=False)
+
         data = self.get_arr(tst_df)
         struc_data = []
         for key in tst_partitions.groups:
-            struc_data.append(data[tst_partitions.get_group(key).index])
-        return struc_data
+            struc_data.append([[key[0], month_converter(
+                key[1]), key[2]], data[tst_partitions.get_group(key).index]])
+        return sorted(struc_data)
 
 
+def get_revenue_pair(X):
+    X = np.vstack([x[1] for x in X])
+    return X[:, :-1], X[:, -1]
+
+
+def get_label_pair(X):
+    Y = [x[1][:, -1].sum() // 10000 for x in X]
+    X = [[x[0], x[1][:, :-1]] for x in X]
+    return X, Y
+
+
+def month_converter(month):
+    months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+              'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    return months.index(month[:3]) + 1
+
+def write_test(X_tst, Y_pre, name):
+    assert len(X_tst) == len(Y_pre)
+    with open(name, 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile, delimiter=',')
+        writer.writerow(['arrival_date', 'label'])
+        for i in range(len(X_tst)):
+            x = X_tst[i]
+            writer.writerow(['{:d}-{:02d}-{:02d}'.format(x[0][0], x[0][1], x[0][2]), '{:.1f}'.format(Y_pre[i])])
+        
 def str_to_bool(v):
     """ This function turn all the True-intended string into True.
 

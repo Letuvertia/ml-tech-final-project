@@ -1,11 +1,15 @@
 base:
   drop_list: ['arrival_date_year', 'arrival_date_month', 'arrival_date_day_of_month', 'is_canceled', 'reservation_status_date', 'reservation_status', 'adr']
 
-RandomForest:
+RF:
+  n_jobs: 6
+  criterion: 'mae'
+  n_estimators: 100
+  verbose: False
+
+SVR:
   tmp: 5566
 
-SVM:
-  tmp: 5566
 
 NN:
   CNN:
@@ -26,23 +30,3 @@ NN:
       warmup_proportion: 0.07                               # Proportion of training to perform linear rate warmup.
       gradient_clipping: 1.0                                # Maximum gradient norm
       total_step: 500000                                            # total steps for training, a step is a batch of update
-
-# model:
-#   Linear:
-#     activation: ReLU
-#   LinearResidual:
-#     cmvn: True
-#   LSTM:
-#     hidden_size: 256
-#     num_layers: 3
-#     bidirectional: True
-#   HINTNet:
-#     hidden_size: 256
-#     num_layers: 3
-#     bidirectional: False
-#   Residual:
-#     hidden_size: 256
-#     num_layers: 3
-#     bidirectional: False
-#     activation: Sigmoid
-#     cmvn: True
