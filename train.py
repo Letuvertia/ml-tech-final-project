@@ -77,6 +77,7 @@ if args.train:
     if not os.path.exists(os.path.join(args.save_path, args.model)):
         os.makedirs(os.path.join(args.save_path, args.model))
     save_model_path = os.path.join(args.save_path, args.model, save_model_name)
+    model.save(save_model_path)
 
 if args.eval:
     grader = Grader(X_val)
@@ -85,10 +86,9 @@ if args.eval:
     #print(grader.eval_mae(model))
     #'''
 
-
-''' testing data
+#''' testing data
 Y_pre = model.predict(X_tst, output='label')
-write_test(X_tst, Y_pre, 'output.csv')
+write_test(X_tst, Y_pre, args.model+'output.csv')
 #'''
 
 
