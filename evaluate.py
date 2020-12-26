@@ -1,8 +1,8 @@
 import numpy as np
-from utils import get_label_pair, get_revenue_pair
+from utils import get_label_pair, get_revenue_pair, get_adr_pair
 from sklearn.metrics import mean_absolute_error
 
-class Grader:
+class Grader(object):
     def __init__(self, X_tst):
         self.data_label, self.label = get_label_pair(X_tst)
         self.data_revenue, self.revenue = get_revenue_pair(X_tst)

@@ -5,11 +5,15 @@ RF:
   n_jobs: 6
   criterion: 'mae'
   n_estimators: 100
-  verbose: False
+  verbose: True
 
 SVR:
-  tmp: 5566
-
+  kernel: 'rbf'
+  gamma: 1
+  C: 10
+  degree: 1
+  coef0: 0.0
+  verbose: True
 
 NN:
   CNN:
@@ -23,10 +27,10 @@ NN:
     num_layers: 3
     bidirectional: False
   dataloader:
-      train_batch_size: 6                                         # training batch size, 12 for pre-train, 6 for cpc exp
+      train_batch_size: 6                  # training batch size, 12 for pre-train, 6 for cpc exp
       eval_batch_size: 12
   hyper:
-      learning_rate: 2e-4                                 # Learning rate for opt: ['4e-3' for fine-tune, '4e-3' for regualr downstream task training]
-      warmup_proportion: 0.07                               # Proportion of training to perform linear rate warmup.
-      gradient_clipping: 1.0                                # Maximum gradient norm
-      total_step: 500000                                            # total steps for training, a step is a batch of update
+      learning_rate: 2e-4                  # Learning rate for opt: ['4e-3' for fine-tune, '4e-3' for regualr downstream task training]
+      warmup_proportion: 0.07              # Proportion of training to perform linear rate warmup.
+      gradient_clipping: 1.0               # Maximum gradient norm
+      total_step: 500000                   # total steps for training, a step is a batch of update

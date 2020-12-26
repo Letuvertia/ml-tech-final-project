@@ -1,11 +1,13 @@
 import numpy as np
 from sklearn.svm import SVR, SVC
+from sklearn.experimental import enable_hist_gradient_boosting
 from sklearn.ensemble import HistGradientBoostingRegressor, HistGradientBoostingClassifier
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier 
 from sklearn.ensemble import AdaBoostRegressor, AdaBoostClassifier
 from sklearn.ensemble import GradientBoostingRegressor, GradientBoostingClassifier
 
-from utils import DataManeger, get_revenue_pair, get_label_pair, get_label_pair, get_adr_pair
+from utils import DataManager
+from utils import get_revenue_pair, get_label_pair, get_adr_pair
 import joblib
 import torch
 
@@ -39,7 +41,6 @@ class CancelModelWrapper(object):
         
     def load(self, path):
         self.model = joblib.load(path)
-
 
 
 class ModelWrapper(object):

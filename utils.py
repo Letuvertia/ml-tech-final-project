@@ -1,13 +1,15 @@
-import pandas as pd
+import argparse
+import csv
 import numpy as np
-from sklearn.preprocessing import OneHotEncoder
 from os import makedirs, remove
 from os.path import exists, join, basename, dirname
-import csv
+import pandas as pd
+from sklearn.preprocessing import OneHotEncoder
+import torch
 
 
-class DataManeger:
-    def __init__(self, path, drop_list=['arrival_date_year', 'arrival_date_day_of_month', 'ID',
+class DataManager(object):
+    def __init__(self, path, drop_list=['arrival_date_week_number', 'ID',
                                         'reservation_status_date', 'reservation_status']):
         self.df = self.read_csv(path)
         self.partitions = self.df.groupby(
@@ -17,29 +19,36 @@ class DataManeger:
         self.df = self.feature_filtering(self.df, self.drop_list)
         self.set_onehot_encoder()
 
+
     def get_revenue(self, x):
+        """ build 'revenue' column
+        """
         x['revenue'] = (x['stays_in_weekend_nights'] +
                         x['stays_in_week_nights']) * x['adr'] * (1 - x['is_canceled'])
+
 
     def read_csv(self, path):
         df = pd.read_csv(path).fillna(
             {'children': 0, 'agent': -1, 'company': -1, 'country': 'NAN'})
         df['agent'] = df['agent'].astype(int).astype(str).replace('-1', 'NAN')
-        df['company'] = df['company'].astype(
-            int).astype(str).replace('-1', 'NAN')
+        df['company'] = df['company'].astype(int).astype(str).replace('-1', 'NAN')
 
         if 'adr' in df.columns:
             self.get_revenue(df)
         return df
 
-    def feature_filtering(self, df, drop_list):
+
+    @staticmethod
+    def feature_filtering(df, drop_list):
         return df.drop(set(drop_list) & set(df.columns), axis=1)
+
 
     def set_onehot_encoder(self):
         text_list = [c for c in self.df.columns if not ('int' in str(
             self.df[c].dtypes) or 'float' in str(self.df[c].dtypes))]
         self.oh_enc = OneHotEncoder()
         self.oh_enc.fit(self.df[text_list].values)
+
 
     def get_arr(self, df):
         text_list = []
@@ -61,13 +70,26 @@ class DataManeger:
             data = np.concatenate((category_data, numeric_data), axis=1)
         return data
 
+
     def get_feat(self):
+        ''' Get the feature vectors grouped by dates
+
+        return: (list)
+            [[[2015, 7, 1], array(feature vectors)],
+             [[2015, 7, 2], array(feature vectors)],
+             ...
+             [[2017, 3, 31], array(feature vectors)]]
+        
+        shape of feature vectors for each day: 
+            (#requests, #features for each request)
+        '''
         data = self.get_arr(self.df)
         struc_data = []
         for key in self.partitions.groups:
             struc_data.append([[key[0], month_converter(
                 key[1]), key[2]], data[self.partitions.get_group(key).index]])
         return sorted(struc_data)
+
 
     def load_test(self, tst_path):
         tst_df = self.read_csv(tst_path)
@@ -91,6 +113,7 @@ class DataManeger:
 
 def get_revenue_pair(X):
     X = np.vstack([x[1] for x in X])
+    print(X.shape)
     return X[:, :-3], X[:, -3]
 
 
@@ -99,9 +122,10 @@ def get_label_pair(X):
     X = [[x[0], x[1][:, :-3]] for x in X]
     return X, Y
 
+
 def get_adr_pair(X):
     X = np.vstack([x[1] for x in X])
-    return X[:, :-3], X[:, -2], X[:, -1]
+    return X[:, :-3], X[:, -2], X[:, -1] # ['revenue', 'is_canceled', 'adr']
 
 
 def month_converter(month):

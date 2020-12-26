@@ -1,15 +1,19 @@
 from __future__ import print_function, division
+from datetime import datetime
 import os
 import numpy as np
 from torch.utils.data import DataLoader
 from sklearn.model_selection import train_test_split
-from options import ArgumentParser
+# from options import ArgumentParser
 # from data_loader import CancelDataset
 # from model.cancel_toy_model import CancelModel
-from utils import DataManeger, get_revenue_pair, get_label_pair, write_test
+import yaml
+
 from evaluate import Grader
 from model import ModelWrapper
-import yaml
+from utils import str_to_bool
+from utils import DataManager, write_test
+from utils import get_revenue_pair, get_label_pair, get_adr_pair
 
 """
 
@@ -25,6 +29,7 @@ import yaml
 
 # Seed
 # np.random.seed(arg_groups['base']['seed'])
+
 np.random.seed(1126)
 
 import argparse
@@ -33,22 +38,64 @@ parser.add_argument('--tra_path', default='data/train.csv', type=str)
 parser.add_argument('--tst_path', default='data/test.csv', type=str)
 parser.add_argument('--config', default='config/base.yaml', type=str)
 parser.add_argument('--model', type=str, required=True)
-parser.add_argument('--save_name', default='model/test.pkl', type=str)
+parser.add_argument('--cancel', type=str_to_bool, nargs='?', const=True, default=False, help='predict is_cancelled')
+parser.add_argument('--save_path', default='trained_models', type=str)
+parser.add_argument('--save_name', default='', type=str)
+parser.add_argument('--load_model', type=str, default='', help='load trained model')
+parser.add_argument('--eval', type=str_to_bool, nargs='?', const=True, default=False, help='evaluate the model')
+parser.add_argument('--train', type=str_to_bool, nargs='?', const=True, default=False, help='train the model')
+
+
 args = parser.parse_args()
 
-DataMgr = DataManeger(args.tra_path)
+config = yaml.load(open(args.config, 'r'), Loader=yaml.FullLoader)
+print(config)
+
+DataMgr = DataManager(args.tra_path)
 X_tst = DataMgr.load_test(args.tst_path)
 X_tra = DataMgr.get_feat()
 X_tra, X_val = train_test_split(X_tra, test_size=0.3, random_state=1126)
 grader = Grader(X_val)
 
-config = yaml.load(open(args.config, 'r'), Loader=yaml.FullLoader)
+'''
+print('===== training data =====')
+print(type(X_tra), len(X_tra), X_tra[0], X_tra[0][1].shape, X_tra[1][1].shape)
+print('===== testing data =====')
+print(type(X_tst), len(X_tst), X_tst[0], X_tst[0][1].shape, X_tst[1][1].shape)
+'''
+
 model = ModelWrapper(args.model, config)
-model.load('model/RF.pkl')
+
+if args.load_model != '':
+    model.load(args.load_model)
+
+if args.train:
+    print('Starting Training {}'.format(args.model))
+    model.train(X_tra)
+    
+    save_model_name = (args.model + datetime.now().strftime('_%m_%d_%H_%M') if args.save_name == '' else args.save_name) + '.pkl'
+    if not os.path.exists(os.path.join(args.save_path, args.model)):
+        os.makedirs(os.path.join(args.save_path, args.model))
+    save_model_path = os.path.join(args.save_path, args.model, save_model_name)
+
+if args.eval:
+    grader = Grader(X_val)
+    #''' validation data
+    print(grader.eval_revenue(model))
+    #print(grader.eval_mae(model))
+    #'''
+
+
+''' testing data
 Y_pre = model.predict(X_tst, output='label')
 write_test(X_tst, Y_pre, 'output.csv')
-# print(grader.eval_revenue(model))
-# print(grader.eval_mae(model))
+#'''
+
+
+
+
+
+
 
 # if arg_groups['base']['model'] == 'cancel':
 #     # dataset
