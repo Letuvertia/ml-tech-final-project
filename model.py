@@ -30,6 +30,7 @@ class ModelTemplate(object):
     def load_initial_weight(self, model_path):
         pass
 
+
 class ModelWrapper(object):
     def __init__(self, model, config, **args):
         self.IsStructLearning = True if model not in ['RF', 'ADB', 'SVR'] else False
