@@ -5,14 +5,15 @@ from os import makedirs, remove
 from os.path import exists, join, basename, dirname
 import csv
 
+
 class DataManeger:
-    def __init__(self, path, drop_list=['arrival_date_year',
-                                        'arrival_date_day_of_month', 'ID', 'is_canceled',
-                                        'reservation_status_date', 'reservation_status', 'adr']):
+    def __init__(self, path, drop_list=['arrival_date_year', 'arrival_date_day_of_month', 'ID',
+                                        'reservation_status_date', 'reservation_status']):
         self.df = self.read_csv(path)
         self.partitions = self.df.groupby(
             ['arrival_date_year', 'arrival_date_month', 'arrival_date_day_of_month'])
         self.drop_list = drop_list
+        self.target_list = ['revenue', 'is_canceled', 'adr']
         self.df = self.feature_filtering(self.df, self.drop_list)
         self.set_onehot_encoder()
 
@@ -44,15 +45,20 @@ class DataManeger:
         text_list = []
         num_list = []
         for c in df.columns:
-            if not ('int' in str(self.df[c].dtypes) or 'float' in str(self.df[c].dtypes)):
-                text_list.append(c)
-            else:
-                num_list.append(c)
+            if c not in self.target_list:
+                if not ('int' in str(self.df[c].dtypes) or 'float' in str(self.df[c].dtypes)):
+                    text_list.append(c)
+                else:
+                    num_list.append(c)
 
         category_data = self.oh_enc.transform(
             df[text_list].values).toarray()
         numeric_data = df[num_list].values
-        data = np.concatenate((category_data, numeric_data), axis=1)
+        if 'adr' in df.columns:
+            target_data = df[self.target_list].values
+            data = np.concatenate((category_data, numeric_data, target_data), axis=1)
+        else:
+            data = np.concatenate((category_data, numeric_data), axis=1)
         return data
 
     def get_feat(self):
@@ -85,19 +91,24 @@ class DataManeger:
 
 def get_revenue_pair(X):
     X = np.vstack([x[1] for x in X])
-    return X[:, :-1], X[:, -1]
+    return X[:, :-3], X[:, -3]
 
 
 def get_label_pair(X):
-    Y = [x[1][:, -1].sum() // 10000 for x in X]
-    X = [[x[0], x[1][:, :-1]] for x in X]
+    Y = [x[1][:, -3].sum() // 10000 for x in X]
+    X = [[x[0], x[1][:, :-3]] for x in X]
     return X, Y
+
+def get_adr_pair(X):
+    X = np.vstack([x[1] for x in X])
+    return X[:, :-3], X[:, -2], X[:, -1]
 
 
 def month_converter(month):
     months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
               'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
     return months.index(month[:3]) + 1
+
 
 def write_test(X_tst, Y_pre, name):
     assert len(X_tst) == len(Y_pre)
@@ -106,8 +117,10 @@ def write_test(X_tst, Y_pre, name):
         writer.writerow(['arrival_date', 'label'])
         for i in range(len(X_tst)):
             x = X_tst[i]
-            writer.writerow(['{:d}-{:02d}-{:02d}'.format(x[0][0], x[0][1], x[0][2]), '{:.1f}'.format(Y_pre[i])])
-        
+            writer.writerow(['{:d}-{:02d}-{:02d}'.format(x[0][0],
+                                                         x[0][1], x[0][2]), '{:.1f}'.format(Y_pre[i])])
+
+
 def str_to_bool(v):
     """ This function turn all the True-intended string into True.
 
