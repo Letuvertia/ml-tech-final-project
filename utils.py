@@ -5,19 +5,23 @@ from os import makedirs, remove
 from os.path import exists, join, basename, dirname
 import pandas as pd
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import normalize
 import torch
 
 
 class DataManager(object):
-    def __init__(self, path, drop_list=['arrival_date_year', 'arrival_date_day_of_month', 'ID',
-                                        'reservation_status_date', 'reservation_status']):
+    def __init__(self, path, drop_list=[]):
         self.df = self.read_csv(path)
         self.partitions = self.df.groupby(
             ['arrival_date_year', 'arrival_date_month', 'arrival_date_day_of_month'])
         self.drop_list = drop_list
         self.target_list = ['stays_in_weekend_nights',
                             'stays_in_week_nights', 'revenue', 'is_canceled', 'adr']
+        #columns = [c for c in self.df.columns]
+        #print(len(columns), columns)
         self.df = self.feature_filtering(self.df, self.drop_list)
+        #columns = [c for c in self.df.columns]
+        #print(len(columns), columns)
         self.set_onehot_encoder()
         
 
@@ -47,6 +51,7 @@ class DataManager(object):
     def set_onehot_encoder(self):
         text_list = [c for c in self.df.columns if not ('int' in str(
             self.df[c].dtypes) or 'float' in str(self.df[c].dtypes))]
+        
         self.oh_enc = OneHotEncoder()
         self.oh_enc.fit(self.df[text_list].values)
 
@@ -60,10 +65,16 @@ class DataManager(object):
                     text_list.append(c)
                 else:
                     num_list.append(c)
-
+        print('*text column:', len(text_list), text_list, end='\n\n')
+        print('*numeric column:', len(num_list), num_list, end='\n\n')
+        
         category_data = self.oh_enc.transform(
             df[text_list].values).toarray()
         numeric_data = df[num_list].values
+        
+        # normalize numeric data
+        # numeric_data = normalize(numeric_data, axis=0)
+        
         if 'adr' in df.columns:
             target_data = df[self.target_list].values
         else:

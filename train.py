@@ -169,8 +169,8 @@ def main():
     if not os.path.exists(os.path.join('trained_models', args.save_path)):
         os.makedirs(os.path.join('trained_models', args.save_path))
 
-    print('Args:')
-    print(args)
+    print('*Args:')
+    print(args, end='\n\n')
 
     random.seed(args.random_seed)
     np.random.seed(args.random_seed)
@@ -179,6 +179,11 @@ def main():
     X_all = DataMgr.get_feat()
     X_tra, X_val = train_test_split(
         X_all, test_size=0.2, random_state=args.random_seed)
+    print('*dropped column:', len(config['base']['drop_list']), config['base']['drop_list'], end='\n\n')
+    #print(X_tra[60][0])
+    #print(X_tra[60][1][9].shape)
+    #print(X_tra[60][1][9].tolist())
+    #raise ImportError
 
     if args.train_task == 'cancel':
         assert args.can_model is not None

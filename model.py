@@ -6,6 +6,9 @@ from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.ensemble import AdaBoostRegressor, AdaBoostClassifier
 from sklearn.ensemble import GradientBoostingRegressor, GradientBoostingClassifier
 
+from xgboost import XGBClassifier
+from lightgbm import LGBMClassifier
+
 from utils import DataManager, get_revenue_pair, get_label_pair, get_label_pair, get_adr_pair
 import joblib
 import torch
@@ -23,9 +26,13 @@ class CancelModel(object):
             self.model = GradientBoostingClassifier(**config[model])
         elif model == 'HistGraBoostC':
             self.model = HistGradientBoostingClassifier(**config[model])
+        elif model == 'XGBoostC':
+            self.model = XGBClassifier(**config[model])
+        elif model == 'lightGBMC':
+            self.model = LGBMClassifier(**config[model])
         elif model == 'SVC':
             self.model = SVC(**config[model])
-        
+    
 
     def save(self, path):
         joblib.dump(self.model, path)

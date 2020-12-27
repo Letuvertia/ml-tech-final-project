@@ -1,6 +1,11 @@
 base:
   drop_list: ['arrival_date_year',
-              'arrival_date_day_of_month',
+              'arrival_date_month',
+  #            'arrival_date_week_number',
+  #            'arrival_date_day_of_month',
+  #            'market_segment',
+  #            'company',
+  #            'is_repeated_guest',
               'ID',
               'reservation_status_date',
               'reservation_status']
@@ -39,7 +44,7 @@ RanForestC:
   n_jobs: 6
   # 'in', 'entropy'
   criterion: 'entropy'
-  class_weight: 'balanced'
+  class_weight: {0.0: 1, 1.0: 50}
   n_estimators: 100
   random_state: 1126
   verbose: True
@@ -69,7 +74,7 @@ GraBoostC:
   # CER
   # 100: 0.139
   # 150: 0.141
-  n_estimators: 150
+  n_estimators: 100
   # The fraction of samples to be used for fitting the individual base learners.
   subsample: 1.0
   # The function to measure the quality of a split.
@@ -83,11 +88,26 @@ GraBoostC:
 HistGraBoostC:
   # loss{'auto', 'binary_crossentropy', 'categorical_crossentropy'}, default='auto'
   loss: 'binary_crossentropy'
-  learning_rate: 0.1
-  tol: 0.0000001
+  learning_rate: 0.05
+  max_iter: 500
+  max_leaf_nodes: ~ # default: 31, ~ => no limit
   validation_fraction: 0.2
   random_state: 1126
   verbose: 1
+
+XGBoostC:
+  # parameter usage [https://xgboost.readthedocs.io/en/stable/parameter.html]
+  booster: 'gbtree'
+  verbosity: 2
+
+lightGBMC:
+  # parameter usage [https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.LGBMClassifier.html#lightgbm.LGBMClassifier]
+  boosting_type: 'gbdt'
+  learning rate: 0.1
+  n_estimators: 100
+  n_jobs: 6
+  class_weight: {0.0: 1, 1.0: 50}
+  random_state: 1126
 
 SVC:
   # kernel{'linear', 'poly', 'rbf', 'sigmoid', 'precomputed'}, default='rbf'
@@ -111,7 +131,6 @@ NN:
     tmp: 5566
   
   LSTM:
-
     hidden_size: 256
     num_layers: 3
     bidirectional: False
