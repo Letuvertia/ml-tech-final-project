@@ -187,13 +187,13 @@ def main():
         assert args.can_model is not None
         model, cer = train(args, config)
         model.save(
-            'model/{:}/{:}_CER_{:.3f}.pkl'.format(args.save_path, args.can_model, cer))
+            'trained_models/{:}/{:}_CER_{:.3f}.pkl'.format(args.save_path, args.can_model, cer))
 
     elif args.train_task == 'adr' or args.train_task == 'revenue':
         assert args.reg_model is not None
         model, rev, mae = train(args, config)
         model.save(
-            'model/{:}/{:}_REV_{:3.3f}_MAE_{:.3f}.pkl'.format(args.save_path, args.reg_model, rev, mae))
+            'trained_models/{:}/{:}_REV_{:3.3f}_MAE_{:.3f}.pkl'.format(args.save_path, args.reg_model, rev, mae))
 
 
 if __name__ == "__main__":
