@@ -91,12 +91,6 @@
 # write_test(X_tst, Y_pre, args.model+'output.csv')
 # #'''
 
-
-
-
-
-
-
 # # if arg_groups['base']['model'] == 'cancel':
 # #     # dataset
 # #     dataset = CancelDataset(feature_file='train.csv',
@@ -123,17 +117,12 @@ import numpy as np
 import random
 from torch.utils.data import DataLoader
 from sklearn.model_selection import train_test_split
-from options import ArgumentParser
+# from options import ArgumentParser
 import argparse
 from utils import DataManager, get_revenue_pair, get_label_pair, write_test
 from evaluate import Grader
 from model import ModelWrapper, CancelModel
 import yaml
-
-"""
-
-
-"""
 
 
 def train(args, config, X_tra, X_val):
@@ -171,8 +160,17 @@ def main():
     parser.add_argument('--can_model', type=str)
     parser.add_argument('--reg_model', type=str)
     parser.add_argument('--can_ckpt', type=str)
-    parser.add_argument('--save_path', type=str)
+    parser.add_argument('--save_path', type=str, default='', 
+        help='name of the directory under /trained_models/')
     args = parser.parse_args()
+
+    if args.save_path == '':
+        args.save_path = args.train_task
+    if not os.path.exists(os.path.join('trained_models', args.save_path)):
+        os.makedirs(os.path.join('trained_models', args.save_path))
+
+    print('ARGS:')
+    print(args)
 
     random.seed(args.random_seed)
     np.random.seed(args.random_seed)
@@ -184,15 +182,21 @@ def main():
 
     if args.train_task == 'cancel':
         assert args.can_model is not None
+        print('Start training the cancel model {:}'.format(args.can_model))
         model, cer = train(args, config, X_tra, X_val)
-        model.save(
-            'trained_models/{:}/{:}_CER_{:.3f}.pkl'.format(args.save_path, args.can_model, cer))
+        
+        model_save_path = 'trained_models/{:}/{:}_CER_{:.3f}.pkl'.format(args.save_path, args.can_model, cer)
+        print('{:} model saved at {:}'.format(args.can_model, model_save_path))
+        model.save(model_save_path)
 
     elif args.train_task == 'adr' or args.train_task == 'revenue':
         assert args.reg_model is not None
+        print('Start training the {:} model {:}'.format(args.train_task, args.reg_model))
         model, rev, mae = train(args, config, X_tra, X_val)
-        model.save(
-            'trained_models/{:}/{:}_REV_{:3.3f}_MAE_{:.3f}.pkl'.format(args.save_path, args.reg_model, rev, mae))
+
+        model_save_path = 'trained_models/{:}/{:}_REV_{:3.3f}_MAE_{:.3f}.pkl'.format(args.save_path, args.reg_model, rev, mae)
+        print('{:} model saved at {:}'.format(args.reg_model, model_save_path))
+        model.save(model_save_path)
 
 
 if __name__ == "__main__":

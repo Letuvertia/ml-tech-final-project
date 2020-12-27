@@ -19,8 +19,7 @@ class DataManager(object):
                             'stays_in_week_nights', 'revenue', 'is_canceled', 'adr']
         self.df = self.feature_filtering(self.df, self.drop_list)
         self.set_onehot_encoder()
-
-
+        
 
     def get_revenue(self, x):
         """ build 'revenue' column

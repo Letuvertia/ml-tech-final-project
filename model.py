@@ -9,17 +9,23 @@ from sklearn.ensemble import GradientBoostingRegressor, GradientBoostingClassifi
 from utils import DataManager, get_revenue_pair, get_label_pair, get_label_pair, get_adr_pair
 import joblib
 import torch
+import os
 
 # light GBM / XGBoost
 
 class CancelModel(object):
     def __init__(self, model, config, **args):
-        if model == 'RFC':
+        if model == 'RanForestC':
             self.model = RandomForestClassifier(**config[model])
-        elif model == 'ADBC':
+        elif model == 'AdaBoostC':
             self.model = AdaBoostClassifier(**config[model])
+        elif model == 'GraBoostC':
+            self.model = GradientBoostingClassifier(**config[model])
+        elif model == 'HistGraBoostC':
+            self.model = HistGradientBoostingClassifier(**config[model])
         elif model == 'SVC':
             self.model = SVC(**config[model])
+        
 
     def save(self, path):
         joblib.dump(self.model, path)
@@ -27,6 +33,11 @@ class CancelModel(object):
     def train(self, X_tra):
         X_tra, Y_tra, _ = get_adr_pair(X_tra)
         assert len(X_tra) == len(Y_tra)
+        print('Training data size:', X_tra.shape)
+        # print(type(Y_tra), Y_tra)
+        # unique, counts = np.unique(Y_tra, return_counts=True)
+        # print(dict(zip(unique, counts)))
+        # raise ImportError
         self.model.fit(X_tra, Y_tra)
 
     def predict(self, X_tst):
@@ -69,6 +80,7 @@ class ModelWrapper(object):
                 X_tra, _, Y_tra = get_adr_pair(X_tra)
 
             assert len(X_tra) == len(Y_tra)
+            print('Training data size:', X_tra.shape)
             self.model.fit(X_tra, Y_tra)
 
     def predict(self, X_tst, output='label'):

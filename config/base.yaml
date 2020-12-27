@@ -1,47 +1,128 @@
 base:
-  drop_list: ['arrival_date_year', 'arrival_date_day_of_month', 'ID', 'reservation_status_date', 'reservation_status']
+  drop_list: ['arrival_date_year',
+              'arrival_date_day_of_month',
+              'ID',
+              'reservation_status_date',
+              'reservation_status']
 
+# ==============================
+# Regression
+# ==============================
 RFR:
   n_jobs: 6
   criterion: 'mae'
   n_estimators: 100
-  verbose: False
-
-RFC:
-  n_jobs: 6
-  # “gini”, “entropy”
-  criterion: 'entropy'
-  class_weight: {1: 1, 0: 50}
-  n_estimators: 100
-  verbose: False
+  verbose: True
 
 SVR:
-  # kernel{‘linear’, ‘poly’, ‘rbf’, ‘sigmoid’, ‘precomputed’}, default=’rbf’
+  # kernel{'linear', 'poly', 'rbf', 'sigmoid', 'precomputed'}, default='rbf'
   kernel: 'rbf'
-  # gamma{‘scale’, ‘auto’} or float, default=’scale’
+  # gamma{'scale', 'auto'} or float, default='scale'
   gamma: 'scale'
   # tolerance: float, default=1e-3 Tolerance for stopping criterion.
   tol: 0.001
   C: 10000
-  # Epsilon in the epsilon-SVR model. It specifies the epsilon-tube within which no penalty is associated in the training loss function with points predicted within a distance epsilon from the actual value.
+  # Epsilon in the epsilon-SVR model. 
+  # It specifies the epsilon-tube within which no penalty is associated in the training loss function with points predicted within a distance epsilon from the actual value.
   epsilon: 0.1
+  verbose: True
 
+
+# ==============================
+# Classification (cancel model)
+# ==============================
+
+# is_cancel: {0.0: 47062, 1.0: 26357}
+# classification weight: {0.0: 1, 1.0: 1.7855598133323216} (47062/26357)
+
+RanForestC:
+  n_jobs: 6
+  # 'in', 'entropy'
+  criterion: 'entropy'
+  class_weight: 'balanced'
+  n_estimators: 100
+  random_state: 1126
+  verbose: True
+
+AdaBoostC:
+  # The base estimator from which the boosted ensemble is built.
+  # Support for sample weighting is required, as well as proper classes_ and n_classes_ attributes.
+  # If None, then the base estimator is DecisionTreeClassifier initialized with max_depth=1.
+  base_estimator: None
+  n_estimators: 50
+  learning_rate: 0.1
+  # algorithm{'SAMME', 'SAMME.R'}, default='SAMME.R'
+  algorithm: 'SAMME.R'
+  random_state: 1126
+  
+
+GraBoostC:
+  # loss{'deviance', 'exponential'}, default='deviance'
+  loss: 'deviance'
+  learning_rate: 0.1
+  n_estimators: 100
+  # The fraction of samples to be used for fitting the individual base learners.
+  subsample: 1.0
+  # The function to measure the quality of a split.
+  criterion: 'mae'
+  # Tolerance for the early stopping
+  tol: 0.0001
+  validation_fraction: 0.2
+  random_state: 1126
+  verbose: 1
+
+HistGraBoostC:
+  # loss{'auto', 'binary_crossentropy', 'categorical_crossentropy'}, default='auto'
+  loss: 'binary_crossentropy'
+  learning_rate: 0.1
+  tol: 0.0000001
+  validation_fraction: 0.2
+  random_state: 1126
+  verbose: 1
+
+SVC:
+  # kernel{'linear', 'poly', 'rbf', 'sigmoid', 'precomputed'}, default='rbf'
+  kernel: 'rbf'
+  # gamma{'scale', 'auto'} or float, default='scale'
+  gamma: 'scale'
+  # tolerance: float, default=1e-3 Tolerance for stopping criterion.
+  tol: 0.001
+  C: 10
+  # Epsilon in the epsilon-SVR model. 
+  # It specifies the epsilon-tube within which no penalty is associated in the training loss function with points predicted within a distance epsilon from the actual value.
+  epsilon: 0.1
+  verbose: True
+
+
+# ==============================
+# NN & DP
+# ==============================
 NN:
   CNN:
     tmp: 5566
+  
   LSTM:
+
     hidden_size: 256
     num_layers: 3
     bidirectional: False
+  
   GRU:
     hidden_size: 256
     num_layers: 3
     bidirectional: False
+  
   dataloader:
-      train_batch_size: 6                                         # training batch size, 12 for pre-train, 6 for cpc exp
-      eval_batch_size: 12
+    # training batch size, 12 for pre-train, 6 for cpc exp
+    train_batch_size: 6
+    eval_batch_size: 12
+  
   hyper:
-      learning_rate: 2e-4                                 # Learning rate for opt: ['4e-3' for fine-tune, '4e-3' for regualr downstream task training]
-      warmup_proportion: 0.07                               # Proportion of training to perform linear rate warmup.
-      gradient_clipping: 1.0                                # Maximum gradient norm
-      total_step: 500000                                            # total steps for training, a step is a batch of update
+    # Learning rate for opt: ['4e-3' for fine-tune, '4e-3' for regualr downstream task training]
+    learning_rate: 2e-4
+    # Proportion of training to perform linear rate warmup.
+    warmup_proportion: 0.07
+    # Maximum gradient norm
+    gradient_clipping: 1.0
+    # total steps for training, a step is a batch of update
+    total_step: 500000
