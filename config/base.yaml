@@ -1,19 +1,30 @@
 base:
-  drop_list: ['arrival_date_year', 'arrival_date_month', 'arrival_date_day_of_month', 'is_canceled', 'reservation_status_date', 'reservation_status', 'adr']
+  drop_list: ['arrival_date_year', 'arrival_date_day_of_month', 'ID', 'reservation_status_date', 'reservation_status']
 
-RF:
+RFR:
   n_jobs: 6
   criterion: 'mae'
   n_estimators: 100
-  verbose: True
+  verbose: False
+
+RFC:
+  n_jobs: 6
+  # “gini”, “entropy”
+  criterion: 'entropy'
+  class_weight: {1: 1, 0: 50}
+  n_estimators: 100
+  verbose: False
 
 SVR:
+  # kernel{‘linear’, ‘poly’, ‘rbf’, ‘sigmoid’, ‘precomputed’}, default=’rbf’
   kernel: 'rbf'
-  gamma: 1
-  C: 10
-  degree: 1
-  coef0: 0.0
-  verbose: True
+  # gamma{‘scale’, ‘auto’} or float, default=’scale’
+  gamma: 'scale'
+  # tolerance: float, default=1e-3 Tolerance for stopping criterion.
+  tol: 0.001
+  C: 10000
+  # Epsilon in the epsilon-SVR model. It specifies the epsilon-tube within which no penalty is associated in the training loss function with points predicted within a distance epsilon from the actual value.
+  epsilon: 0.1
 
 NN:
   CNN:
@@ -27,10 +38,10 @@ NN:
     num_layers: 3
     bidirectional: False
   dataloader:
-      train_batch_size: 6                  # training batch size, 12 for pre-train, 6 for cpc exp
+      train_batch_size: 6                                         # training batch size, 12 for pre-train, 6 for cpc exp
       eval_batch_size: 12
   hyper:
-      learning_rate: 2e-4                  # Learning rate for opt: ['4e-3' for fine-tune, '4e-3' for regualr downstream task training]
-      warmup_proportion: 0.07              # Proportion of training to perform linear rate warmup.
-      gradient_clipping: 1.0               # Maximum gradient norm
-      total_step: 500000                   # total steps for training, a step is a batch of update
+      learning_rate: 2e-4                                 # Learning rate for opt: ['4e-3' for fine-tune, '4e-3' for regualr downstream task training]
+      warmup_proportion: 0.07                               # Proportion of training to perform linear rate warmup.
+      gradient_clipping: 1.0                                # Maximum gradient norm
+      total_step: 500000                                            # total steps for training, a step is a batch of update
