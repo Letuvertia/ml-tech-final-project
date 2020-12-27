@@ -136,12 +136,7 @@ import yaml
 """
 
 
-def train(args, config):
-    DataMgr = DataManager(args.tra_path, config['base']['drop_list'])
-    X_all = DataMgr.get_feat()
-    X_tra, X_val = train_test_split(
-        X_all, test_size=0.2, random_state=args.random_seed)
-
+def train(args, config, X_tra, X_val):
     grader = Grader(X_val)
 
     if args.save_path is None:
@@ -182,16 +177,20 @@ def main():
     random.seed(args.random_seed)
     np.random.seed(args.random_seed)
     config = yaml.load(open(args.config, 'r'), Loader=yaml.FullLoader)
+    DataMgr = DataManager(args.tra_path, config['base']['drop_list'])
+    X_all = DataMgr.get_feat()
+    X_tra, X_val = train_test_split(
+        X_all, test_size=0.2, random_state=args.random_seed)
 
     if args.train_task == 'cancel':
         assert args.can_model is not None
-        model, cer = train(args, config)
+        model, cer = train(args, config, X_tra, X_val)
         model.save(
             'trained_models/{:}/{:}_CER_{:.3f}.pkl'.format(args.save_path, args.can_model, cer))
 
     elif args.train_task == 'adr' or args.train_task == 'revenue':
         assert args.reg_model is not None
-        model, rev, mae = train(args, config)
+        model, rev, mae = train(args, config, X_tra, X_val)
         model.save(
             'trained_models/{:}/{:}_REV_{:3.3f}_MAE_{:.3f}.pkl'.format(args.save_path, args.reg_model, rev, mae))
 
