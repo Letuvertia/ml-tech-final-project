@@ -6,7 +6,7 @@ from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.ensemble import AdaBoostRegressor, AdaBoostClassifier
 from sklearn.ensemble import GradientBoostingRegressor, GradientBoostingClassifier
 
-from utils import DataManeger, get_revenue_pair, get_label_pair, get_label_pair, get_adr_pair
+from utils import DataManager, get_revenue_pair, get_label_pair, get_label_pair, get_adr_pair
 import joblib
 import torch
 

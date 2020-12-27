@@ -125,7 +125,7 @@ from torch.utils.data import DataLoader
 from sklearn.model_selection import train_test_split
 from options import ArgumentParser
 import argparse
-from utils import DataManeger, get_revenue_pair, get_label_pair, write_test
+from utils import DataManager, get_revenue_pair, get_label_pair, write_test
 from evaluate import Grader
 from model import ModelWrapper, CancelModel
 import yaml
@@ -137,7 +137,7 @@ import yaml
 
 
 def train(args, config):
-    DataMgr = DataManeger(args.tra_path, config['base']['drop_list'])
+    DataMgr = DataManager(args.tra_path, config['base']['drop_list'])
     X_all = DataMgr.get_feat()
     X_tra, X_val = train_test_split(
         X_all, test_size=0.2, random_state=args.random_seed)
