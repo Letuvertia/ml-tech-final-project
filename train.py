@@ -179,7 +179,7 @@ def main():
     X_all = DataMgr.get_feat()
     X_tra, X_val = train_test_split(
         X_all, test_size=0.2, random_state=args.random_seed)
-    print('*dropped column:', len(config['base']['drop_list']), config['base']['drop_list'], end='\n\n')
+    print('*dropped column:\n', len(config['base']['drop_list']), config['base']['drop_list'], end='\n\n')
     #print(X_tra[60][0])
     #print(X_tra[60][1][9].shape)
     #print(X_tra[60][1][9].tolist())

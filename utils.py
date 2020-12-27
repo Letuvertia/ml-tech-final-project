@@ -65,8 +65,8 @@ class DataManager(object):
                     text_list.append(c)
                 else:
                     num_list.append(c)
-        print('*text column:', len(text_list), text_list, end='\n\n')
-        print('*numeric column:', len(num_list), num_list, end='\n\n')
+        print('*text column:\n', len(text_list), text_list, end='\n\n')
+        print('*numeric column:\n', len(num_list), num_list, end='\n\n')
         
         category_data = self.oh_enc.transform(
             df[text_list].values).toarray()

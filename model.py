@@ -45,7 +45,7 @@ class CancelModel(object):
         # unique, counts = np.unique(Y_tra, return_counts=True)
         # print(dict(zip(unique, counts)))
         # raise ImportError
-        self.model.fit(X_tra, Y_tra)
+        self.model.fit(X_tra[:], Y_tra[:])
 
     def predict(self, X_tst):
         return self.model.predict(X_tst)
@@ -75,7 +75,7 @@ class ModelWrapper(object):
         if not self.IsStructLearning:
             joblib.dump(self.__dict__, path)
         else:
-            # TO BE DONE
+            # TODO
             pass
             # torch.save(self.model, path)
 

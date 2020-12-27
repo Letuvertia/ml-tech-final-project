@@ -59,8 +59,7 @@ AdaBoostC:
   # 50: 0.217
   # 100: 0.208
   n_estimators: 100
-
-  learning_rate: 0.1
+  learning_rate: 1
   # algorithm{'SAMME', 'SAMME.R'}, default='SAMME.R'
   algorithm: 'SAMME.R'
   random_state: 1126
@@ -96,9 +95,17 @@ HistGraBoostC:
   verbose: 1
 
 XGBoostC:
-  # parameter usage [https://xgboost.readthedocs.io/en/stable/parameter.html]
+  # parameter usage is here [https://xgboost.readthedocs.io/en/stable/parameter.html]
+  # and here [https://xgboost.readthedocs.io/en/latest/python/python_api.html#module-xgboost.sklearn]
+  # and here [https://github.com/dmlc/xgboost/blob/master/doc/parameter.rst]
   booster: 'gbtree'
-  verbosity: 2
+  n_estimators: 100
+  learning_rate: 0.1
+  verbosity: 3
+  random_state: 1126
+  # Control the balance of positive and negative weights, useful for unbalanced classes.
+  # A typical value to consider: sum(negative instances) / sum(positive instances).
+  scale_pos_weight: 1.7855598133323216
 
 lightGBMC:
   # parameter usage [https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.LGBMClassifier.html#lightgbm.LGBMClassifier]
@@ -121,9 +128,6 @@ SVC:
   # tolerance: float, default=1e-3 Tolerance for stopping criterion.
   tol: 0.001
   C: 10
-  # Epsilon in the epsilon-SVR model. 
-  # It specifies the epsilon-tube within which no penalty is associated in the training loss function with points predicted within a distance epsilon from the actual value.
-  epsilon: 0.1
   verbose: True
 
 
