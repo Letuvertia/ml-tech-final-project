@@ -48,8 +48,13 @@ AdaBoostC:
   # The base estimator from which the boosted ensemble is built.
   # Support for sample weighting is required, as well as proper classes_ and n_classes_ attributes.
   # If None, then the base estimator is DecisionTreeClassifier initialized with max_depth=1.
-  base_estimator: None
-  n_estimators: 50
+  #base_estimator: None
+
+  # CER 
+  # 50: 0.217
+  # 100: 0.208
+  n_estimators: 100
+
   learning_rate: 0.1
   # algorithm{'SAMME', 'SAMME.R'}, default='SAMME.R'
   algorithm: 'SAMME.R'
@@ -60,11 +65,15 @@ GraBoostC:
   # loss{'deviance', 'exponential'}, default='deviance'
   loss: 'deviance'
   learning_rate: 0.1
-  n_estimators: 100
+
+  # CER
+  # 100: 0.139
+  # 150: 0.141
+  n_estimators: 150
   # The fraction of samples to be used for fitting the individual base learners.
   subsample: 1.0
   # The function to measure the quality of a split.
-  criterion: 'mae'
+  criterion: 'friedman_mse'
   # Tolerance for the early stopping
   tol: 0.0001
   validation_fraction: 0.2

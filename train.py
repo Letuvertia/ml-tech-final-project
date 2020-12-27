@@ -169,7 +169,7 @@ def main():
     if not os.path.exists(os.path.join('trained_models', args.save_path)):
         os.makedirs(os.path.join('trained_models', args.save_path))
 
-    print('ARGS:')
+    print('Args:')
     print(args)
 
     random.seed(args.random_seed)
