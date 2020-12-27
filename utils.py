@@ -9,15 +9,17 @@ import torch
 
 
 class DataManager(object):
-    def __init__(self, path, drop_list=['arrival_date_week_number', 'ID',
+    def __init__(self, path, drop_list=['arrival_date_year', 'arrival_date_day_of_month', 'ID',
                                         'reservation_status_date', 'reservation_status']):
         self.df = self.read_csv(path)
         self.partitions = self.df.groupby(
             ['arrival_date_year', 'arrival_date_month', 'arrival_date_day_of_month'])
         self.drop_list = drop_list
-        self.target_list = ['revenue', 'is_canceled', 'adr']
+        self.target_list = ['stays_in_weekend_nights',
+                            'stays_in_week_nights', 'revenue', 'is_canceled', 'adr']
         self.df = self.feature_filtering(self.df, self.drop_list)
         self.set_onehot_encoder()
+
 
 
     def get_revenue(self, x):
@@ -65,9 +67,10 @@ class DataManager(object):
         numeric_data = df[num_list].values
         if 'adr' in df.columns:
             target_data = df[self.target_list].values
-            data = np.concatenate((category_data, numeric_data, target_data), axis=1)
         else:
-            data = np.concatenate((category_data, numeric_data), axis=1)
+            target_data = df[self.target_list[:-3]].values
+        data = np.concatenate(
+            (category_data, numeric_data, target_data), axis=1)
         return data
 
 
@@ -89,7 +92,6 @@ class DataManager(object):
             struc_data.append([[key[0], month_converter(
                 key[1]), key[2]], data[self.partitions.get_group(key).index]])
         return sorted(struc_data)
-
 
     def load_test(self, tst_path):
         tst_df = self.read_csv(tst_path)
@@ -113,7 +115,6 @@ class DataManager(object):
 
 def get_revenue_pair(X):
     X = np.vstack([x[1] for x in X])
-    print(X.shape)
     return X[:, :-3], X[:, -3]
 
 
