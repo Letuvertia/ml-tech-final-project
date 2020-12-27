@@ -1,0 +1,10 @@
+**/.vscode/**
+**/__pycache__/**
+**/.git/**
+**/trained_model/**
+**/data/**
+
+*.ipynb
+*.yaml
+*.sh
+*.csv
