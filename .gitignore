@@ -3,6 +3,7 @@
 **/.git/**
 **/trained_models/**
 **/data/**
+**/cer_attr/**
 
 *.ipynb
 *.yaml

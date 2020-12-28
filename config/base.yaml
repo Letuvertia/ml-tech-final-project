@@ -53,12 +53,11 @@ AdaBoostC:
   # The base estimator from which the boosted ensemble is built.
   # Support for sample weighting is required, as well as proper classes_ and n_classes_ attributes.
   # If None, then the base estimator is DecisionTreeClassifier initialized with max_depth=1.
-  #base_estimator: None
-
+  base_estimator: ~
   # CER 
-  # 50: 0.217
-  # 100: 0.208
-  n_estimators: 100
+  # n_estimators
+  # 50: 0.217 / 100: 0.208
+  n_estimators: 150
   learning_rate: 1
   # algorithm{'SAMME', 'SAMME.R'}, default='SAMME.R'
   algorithm: 'SAMME.R'
