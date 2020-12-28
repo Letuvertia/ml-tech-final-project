@@ -6,24 +6,32 @@ from os.path import exists, join, basename, dirname
 import pandas as pd
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.preprocessing import normalize
+from sklearn.preprocessing import LabelEncoder
 import torch
 
 
 class DataManager(object):
     def __init__(self, path, drop_list=[]):
-        self.df = self.read_csv(path)
-        self.partitions = self.df.groupby(
-            ['arrival_date_year', 'arrival_date_month', 'arrival_date_day_of_month'])
         self.drop_list = drop_list
         self.target_list = ['stays_in_weekend_nights',
                             'stays_in_week_nights', 'revenue', 'is_canceled', 'adr']
-        #columns = [c for c in self.df.columns]
-        #print(len(columns), columns)
+        
+        self.df = self.read_csv(path)
+        self.df = self.feature_engineering_original(self.df, path)
+        #self.df = self.feature_engineering(self.df)
+        self.partitions = self.df.groupby(
+            ['arrival_date_year', 'arrival_date_month', 'arrival_date_day_of_month'])
         self.df = self.feature_filtering(self.df, self.drop_list)
-        #columns = [c for c in self.df.columns]
-        #print(len(columns), columns)
         self.set_onehot_encoder()
         
+        #columns = [c for c in self.df.columns]
+        #print(len(columns), columns)
+
+    
+    def read_csv(self, path):
+        df = pd.read_csv(path)
+        return df
+
 
     def get_revenue(self, x):
         """ build 'revenue' column
@@ -31,32 +39,59 @@ class DataManager(object):
         x['revenue'] = (x['stays_in_weekend_nights'] +
                         x['stays_in_week_nights']) * x['adr'] * (1 - x['is_canceled'])
 
+    
+    def feature_engineering_original(self, df, path):
+        df = pd.read_csv(path).fillna(
+            {'children': 0, 'agent': -1, 'company': -1, 'country': 'NAN'})
+        df['agent'] = df['agent'].astype(int).astype(str).replace('-1', 'NAN')
+        df['company'] = df['company'].astype(int).astype(str).replace('-1', 'NAN')
 
-    def read_csv(self, path):
-        #df = pd.read_csv(path).fillna(
-        #    {'children': 0, 'agent': -1, 'company': -1, 'country': 'NAN'})
-        #df['agent'] = df['agent'].astype(int).astype(str).replace('-1', 'NAN')
-        #df['company'] = df['company'].astype(int).astype(str).replace('-1', 'NAN')
-        #if 'adr' in df.columns:
-        #    self.get_revenue(df)
+        if 'adr' in df.columns:
+            self.get_revenue(df)
+        return df
 
+
+    @staticmethod
+    def feature_engineering(df):
         ''' reproduction of this feature pre-processing 
             [https://medium.com/analytics-vidhya/exploratory-data-analysis-of-the-hotel-booking-demand-with-python-200925230106]
         '''
-        self.original_data = pd.read_csv(path)
-        df = self.original_data.copy()
+        # fill na and change data type
         df[['agent','company']] = df[['agent','company']].fillna(0.0)
-        df['country'].fillna(self.original_data.country.mode().to_string(), inplace=True)
-        df['children'].fillna(round(self.original_data.children.mean()), inplace=True)
-        df = df.drop(df[(df.adults+df.babies+df.children)==0].index)
+        df['country'].fillna(df.country.mode().to_string(), inplace=True)
+        df['children'].fillna(round(df.children.mean()), inplace=True)
+        #df = df.drop(df[(df.adults+df.babies+df.children)==0].index)
         df[['children', 'company', 'agent']] = df[['children', 'company', 'agent']].astype('int64')
         
+        # feature engineering - add new features
+        df['Room'] = 0
+        df.loc[df['reserved_room_type'] == df['assigned_room_type'], 'Room'] = 1
+        
+        df['net_cancelled'] = 0
+        df.loc[df['previous_cancellations'] > df['previous_bookings_not_canceled'], 'net_cancelled'] = 1
+        
+        if 'adr' in df.columns:
+            # build 'revenue' column
+            df['revenue'] = (df['stays_in_weekend_nights'] +
+                             df['stays_in_week_nights']) * df['adr'] * (1 - df['is_canceled'])
+
         return df
 
 
     @staticmethod
     def feature_filtering(df, drop_list):
         return df.drop(set(drop_list) & set(df.columns), axis=1)
+
+    
+    '''
+    @staticmethod
+    def feature_label_encoder(df):
+        label_enc = LabelEncoder()
+        ## Select all categorcial features
+        categorical_features = list(df.columns[df.dtypes == object])
+        ## Apply Label Encoding on all categorical features
+        return df[categorical_features].apply(lambda x: label_enc.fit_transform(x))
+    '''
 
 
     def set_onehot_encoder(self):
@@ -117,6 +152,7 @@ class DataManager(object):
 
     def load_test(self, tst_path):
         tst_df = self.read_csv(tst_path)
+        tst_df = self.feature_engineering(tst_df)
         tst_partitions = tst_df.groupby(
             ['arrival_date_year', 'arrival_date_month', 'arrival_date_day_of_month'])
         tst_df = self.feature_filtering(tst_df, self.drop_list)

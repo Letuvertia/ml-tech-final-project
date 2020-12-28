@@ -9,6 +9,18 @@ base:
               'ID',
               'reservation_status_date',
               'reservation_status']
+  # this feature selection is suggested in [https://medium.com/analytics-vidhya/exploratory-data-analysis-of-the-hotel-booking-demand-with-python-200925230106]
+  #drop_list: ['ID',
+  #            'arrival_date_year',
+  #            'arrival_date_week_number',
+  #            'arrival_date_day_of_month',
+  #            'arrival_date_month',
+  #            'assigned_room_type',
+  #            'reserved_room_type',
+  #            'reservation_status_date',
+  #            'reservation_status',
+  #            'previous_cancellations',
+  #            'previous_bookings_not_canceled']
 
 # ==============================
 # Regression
@@ -42,9 +54,11 @@ SVR:
 
 RanForestC:
   n_jobs: 6
-  # 'in', 'entropy'
+  # 'gini', 'entropy'
   criterion: 'entropy'
-  class_weight: {0.0: 1, 1.0: 50}
+  # class_weight: {"balanced", "balanced_subsample"}, default=None
+  # {0.0: 1.0, 1.0: 50.0}
+  class_weight: "balanced"
   n_estimators: 100
   random_state: 1126
   verbose: True
@@ -118,6 +132,28 @@ lightGBMC:
   class_weight: 'balanced' #{0.0: 1, 1.0: 50}
   random_state: 1126
   silent: False
+
+BaggingC:
+  n_estimators: 10
+  bootstrap: True
+  # bootstrap_features: whether features are drawn with replacement.
+  bootstrap_features: False
+  n_jobs: 6
+  random_state: 1126
+  verbose: 1
+
+MLPC:
+  hidden_layer_sizes: !!python/tuple [100,]
+  activation: 'relu'
+  solver: 'adam'
+  batch_size: 'auto'
+  # learning_rate{'constant', 'invscaling', 'adaptive'}
+  learning_rate: 'constant'
+  learning_rate_init: 0.001
+  max_iter: 200
+  shuffle: True
+  random_state: 1126
+  verbose: True
 
 SVC:
   # kernel{'linear', 'poly', 'rbf', 'sigmoid', 'precomputed'}, default='rbf'

@@ -5,6 +5,8 @@ from sklearn.ensemble import HistGradientBoostingRegressor, HistGradientBoosting
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier 
 from sklearn.ensemble import AdaBoostRegressor, AdaBoostClassifier
 from sklearn.ensemble import GradientBoostingRegressor, GradientBoostingClassifier
+from sklearn.ensemble import BaggingRegressor, BaggingClassifier
+from sklearn.neural_network import MLPRegressor, MLPClassifier
 
 from xgboost import XGBClassifier
 from lightgbm import LGBMClassifier
@@ -30,6 +32,10 @@ class CancelModel(object):
             self.model = XGBClassifier(**config[model])
         elif model == 'lightGBMC':
             self.model = LGBMClassifier(**config[model])
+        elif model == 'BaggingC':
+            self.model = BaggingClassifier(**config[model])
+        elif model == 'MLPC':
+            self.model = MLPClassifier(**config[model])
         elif model == 'SVC':
             self.model = SVC(**config[model])
     
