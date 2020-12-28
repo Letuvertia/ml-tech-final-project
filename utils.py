@@ -33,13 +33,24 @@ class DataManager(object):
 
 
     def read_csv(self, path):
-        df = pd.read_csv(path).fillna(
-            {'children': 0, 'agent': -1, 'company': -1, 'country': 'NAN'})
-        df['agent'] = df['agent'].astype(int).astype(str).replace('-1', 'NAN')
-        df['company'] = df['company'].astype(int).astype(str).replace('-1', 'NAN')
+        #df = pd.read_csv(path).fillna(
+        #    {'children': 0, 'agent': -1, 'company': -1, 'country': 'NAN'})
+        #df['agent'] = df['agent'].astype(int).astype(str).replace('-1', 'NAN')
+        #df['company'] = df['company'].astype(int).astype(str).replace('-1', 'NAN')
+        #if 'adr' in df.columns:
+        #    self.get_revenue(df)
 
-        if 'adr' in df.columns:
-            self.get_revenue(df)
+        ''' reproduction of this feature pre-processing 
+            [https://medium.com/analytics-vidhya/exploratory-data-analysis-of-the-hotel-booking-demand-with-python-200925230106]
+        '''
+        self.original_data = pd.read_csv(path)
+        df = self.original_data.copy()
+        df[['agent','company']] = df[['agent','company']].fillna(0.0)
+        df['country'].fillna(self.original_data.country.mode().to_string(), inplace=True)
+        df['children'].fillna(round(self.original_data.children.mean()), inplace=True)
+        df = df.drop(df[(df.adults+df.babies+df.children)==0].index)
+        df[['children', 'company', 'agent']] = df[['children', 'company', 'agent']].astype('int64')
+        
         return df
 
 
@@ -102,6 +113,7 @@ class DataManager(object):
             struc_data.append([[key[0], month_converter(
                 key[1]), key[2]], data[self.partitions.get_group(key).index]])
         return sorted(struc_data)
+
 
     def load_test(self, tst_path):
         tst_df = self.read_csv(tst_path)
