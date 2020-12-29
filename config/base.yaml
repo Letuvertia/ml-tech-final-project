@@ -134,7 +134,7 @@ lightGBMC:
   silent: False
 
 BaggingC:
-  n_estimators: 10
+  n_estimators: 50
   bootstrap: True
   # bootstrap_features: whether features are drawn with replacement.
   bootstrap_features: False
