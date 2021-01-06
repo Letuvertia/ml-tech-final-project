@@ -1,14 +1,14 @@
 base:
-  drop_list: ['arrival_date_year',
-              'arrival_date_month',
-  #            'arrival_date_week_number',
-  #            'arrival_date_day_of_month',
-  #            'market_segment',
-  #            'company',
-  #            'is_repeated_guest',
-              'ID',
-              'reservation_status_date',
-              'reservation_status']
+  #drop_list: ['arrival_date_week_number',
+  #            'ID',
+  #            'is_repeated_guest']
+  drop_list: ["reservation_status",
+              "reservation_status_date",]
+  #drop_list: ['arrival_date_year',
+  #            'arrival_date_month',
+  #            'ID',
+  #            'reservation_status_date',
+  #            'resDervation_status']
   # this feature selection is suggested in [https://medium.com/analytics-vidhya/exploratory-data-analysis-of-the-hotel-booking-demand-with-python-200925230106]
   #drop_list: ['ID',
   #            'arrival_date_year',
@@ -21,11 +21,18 @@ base:
   #            'reservation_status',
   #            'previous_cancellations',
   #            'previous_bookings_not_canceled']
+  poly_trans_list: ['country',
+                    'total_of_special_requests',]
+  #                  'lead_time',
+  #                  'agent',
+  #                  'deposit_type']
+  poly_trans_degree: ~
+  feature_copy_times: ~
 
 # ==============================
 # Regression
 # ==============================
-RFR:
+RanForestR:
   n_jobs: 6
   criterion: 'mae'
   n_estimators: 100
@@ -44,6 +51,15 @@ SVR:
   epsilon: 0.1
   verbose: True
 
+HistGraBoostR:
+  loss: 'least_squares'
+  learning_rate: 0.05
+  max_iter: 600
+  max_leaf_nodes: 32
+  max_depth: ~
+  verbose: 1
+  random_state: 1126
+
 
 # ==============================
 # Classification (cancel model)
@@ -58,10 +74,11 @@ RanForestC:
   criterion: 'entropy'
   # class_weight: {"balanced", "balanced_subsample"}, default=None
   # {0.0: 1.0, 1.0: 50.0}
-  class_weight: "balanced"
+  class_weight: "balanced_subsample"
+  oob_score: True
   n_estimators: 100
   random_state: 1126
-  verbose: True
+  verbose: False
 
 AdaBoostC:
   # The base estimator from which the boosted ensemble is built.
@@ -72,16 +89,15 @@ AdaBoostC:
   # n_estimators
   # 50: 0.217 / 100: 0.208
   n_estimators: 150
-  learning_rate: 1
+  learning_rate: 0.8
   # algorithm{'SAMME', 'SAMME.R'}, default='SAMME.R'
   algorithm: 'SAMME.R'
   random_state: 1126
-  
 
 GraBoostC:
   # loss{'deviance', 'exponential'}, default='deviance'
   loss: 'deviance'
-  learning_rate: 0.1
+  learning_rate: 1.0
 
   # CER
   # 100: 0.139
@@ -102,7 +118,7 @@ HistGraBoostC:
   loss: 'binary_crossentropy'
   learning_rate: 0.05
   max_iter: 500
-  max_leaf_nodes: ~ # default: 31, ~ => no limit
+  max_leaf_nodes: 28 # default: 31, ~ => no limit
   validation_fraction: 0.2
   random_state: 1126
   verbose: 1
@@ -113,7 +129,7 @@ XGBoostC:
   # and here [https://github.com/dmlc/xgboost/blob/master/doc/parameter.rst]
   booster: 'gbtree'
   n_estimators: 100
-  learning_rate: 0.1
+  learning_rate: 1.2
   verbosity: 3
   random_state: 1126
   # Control the balance of positive and negative weights, useful for unbalanced classes.
@@ -123,7 +139,7 @@ XGBoostC:
 lightGBMC:
   # parameter usage [https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.LGBMClassifier.html#lightgbm.LGBMClassifier]
   boosting_type: 'gbdt'
-  learning_rate: 0.1
+  learning_rate: 0.04
   # CER
   # n_estimators: 
   #     100: 0.144/ 150: 0.135 / 200: 0.135
@@ -134,7 +150,7 @@ lightGBMC:
   silent: False
 
 BaggingC:
-  n_estimators: 50
+  n_estimators: 150
   bootstrap: True
   # bootstrap_features: whether features are drawn with replacement.
   bootstrap_features: False
@@ -143,13 +159,13 @@ BaggingC:
   verbose: 1
 
 MLPC:
-  hidden_layer_sizes: !!python/tuple [100,]
+  hidden_layer_sizes: !!python/tuple [100,200,100,]
   activation: 'relu'
   solver: 'adam'
   batch_size: 'auto'
   # learning_rate{'constant', 'invscaling', 'adaptive'}
-  learning_rate: 'constant'
-  learning_rate_init: 0.001
+  learning_rate: 'invscaling'
+  learning_rate_init: 0.05
   max_iter: 200
   shuffle: True
   random_state: 1126

@@ -63,14 +63,17 @@ class CancelModel(object):
 class ModelWrapper(object):
     def __init__(self, args, config):
         self.IsStructLearning = True if args.reg_model not in [
-            'RFR', 'ADBR', 'SVR', 'DNN'] else False
-        if args.reg_model == 'RFR':
+            'RanForestR', 'ADBR', 'SVR', 'DNN', 'HistGraBoostR'] else False
+        if args.reg_model == 'RanForestR':
             self.model = RandomForestRegressor(**config[args.reg_model])
         elif args.reg_model == 'ADBR':
             self.model = AdaBoostRegressor(**config[args.reg_model])
         elif args.reg_model == 'SVR':
             self.model = SVR(**config[args.reg_model])
-        
+        elif args.reg_model == 'HistGraBoostR':
+            self.model = HistGradientBoostingRegressor(**config[args.reg_model])
+
+
         self.train_task = args.train_task
         assert self.train_task in ['adr', 'revenue', 'label']
         self.cancel_model = None
@@ -102,15 +105,20 @@ class ModelWrapper(object):
             if self.train_task == 'adr':
                 def get_revenue(X_tst):
                     if self.cancel_model is not None:
+                        print("get revenue from adr boosted with cancel")
                         stays_in_weekend_nights = X_tst[:, -2]
                         stays_in_week_nights = X_tst[:, -1]
                         cancel_pre = 1 - self.cancel_model.predict(X_tst)
                         return self.model.predict(X_tst) * (stays_in_weekend_nights + stays_in_week_nights) * cancel_pre
                     else:
-                        print("cancel model haven't been loaded!")
-                        return None
+                        #print("cancel model haven't been loaded!")
+                        print("get revenue from adr boosted without cancel")
+                        stays_in_weekend_nights = X_tst[:, -2]
+                        stays_in_week_nights = X_tst[:, -1]
+                        return self.model.predict(X_tst) * (stays_in_weekend_nights + stays_in_week_nights)
+
             if output == 'label':
-                # preparing data
+                # preparing data                                   
                 Y_pre = []
                 place = []
                 counter = 0
@@ -133,7 +141,10 @@ class ModelWrapper(object):
                     Y_tst_cat = get_revenue(X_tst_cat)
                     for p in place:
                             Y_pre.append(Y_tst_cat[p])
+                
+                print([y.sum() for y in Y_pre])
                 return [y.sum() // 10000 for y in Y_pre]
+            
             elif output == 'revenue':
                 if self.train_task == 'revenue':
                     if self.cancel_model is not None:
@@ -142,6 +153,7 @@ class ModelWrapper(object):
                         return self.model.predict(X_tst)
                 elif self.train_task == 'adr':
                     return get_revenue(X_tst)
+            
             else:
                 assert self.cancel_model is not None
                 return self.cancel_model.predict(X_tst)
