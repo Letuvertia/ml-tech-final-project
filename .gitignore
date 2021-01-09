@@ -3,8 +3,10 @@
 **/.git/**
 **/trained_models/**
 **/data/**
+**/catboost_info/**
 
 *.ipynb
 *.yaml
 *.sh
 *.csv
+*.npy
